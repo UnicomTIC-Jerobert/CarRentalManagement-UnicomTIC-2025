@@ -1,6 +1,6 @@
 
-> ** Ok then lets create all the entities we need for this project and lets create Data/ApplicationDbContext.cs file as well ,
-> here lets configure the entities relationship as well **
+> " Ok then lets create all the entities we need for this project and lets create Data/ApplicationDbContext.cs file as well ,
+> here lets configure the entities relationship as well "
 
 
 ---
