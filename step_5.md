@@ -1,5 +1,5 @@
 ** USER : **
-" Great lets create the Client Side razor pages and Appropriate AJAX calls to handle this scenario & why dont we use tailwind CSS to hadndle the styles "
+1. Great lets create the Client Side razor pages and Appropriate AJAX calls to handle this scenario & why dont we use tailwind CSS to hadndle the styles
 
 ---
 
