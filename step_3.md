@@ -1,6 +1,6 @@
-```
-"**User:** Ok then, let's create all the entities we need for this project. Also, let's create `Data/ApplicationDbContext.cs` file and configure the entities relationship as well."
-```
+
+"**User:** 
+Ok then, let's create all the entities we need for this project. Also, let's create `Data/ApplicationDbContext.cs` file and configure the entities relationship as well."
 
 ---
 Excellent. Let's create all the entity classes for your project and then set up the `ApplicationDbContext` to manage them and define their relationships.
