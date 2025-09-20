@@ -2,6 +2,7 @@
 ** USER  ** 
 1. its great lets now build the Interfaces and Implementations for the Appropriate Entities
 2. plz create the Appropriate Controllers flow for Auth and User Mangement mean time can you able create JWT related utility files as well and imlement those things in this flow
+3.  ERROR : """ An object reference is required for the non-static field, method, or property 'IConfiguration.GetSection(string)' """
 
 
 ---
@@ -671,3 +672,120 @@ You have now fully implemented a secure, token-based authentication system.
 1.  **Create the Database:** Run `dotnet ef migrations add InitialCreate` and `dotnet ef database update` in the terminal to create your database and tables.
 2.  **Test the API:** Use a tool like Postman or the built-in Swagger UI (if you add it) to send POST requests to `/api/auth/register` and `/api/auth/login` to test the flow.
 3.  **Client-Side:** Build the Razor Pages and JavaScript AJAX calls to interact with these new API endpoints.
+
+---
+
+### ERROR :
+
+You are absolutely right. My apologies. You've caught a classic C# error in my previous code. The message "An object reference is required for the non-static field, method, or property" means I tried to use `IConfiguration.GetSection` as if it were a static method, when it needs to be called on an *instance* of the configuration object.
+
+The correct instance is `builder.Configuration`, which is available from the `WebApplication.CreateBuilder(args)` line.
+
+Let's correct this in the `Program.cs` file.
+
+### The Correction
+
+The error is in this line from the previous response:
+`var jwtSettings = IConfiguration.GetSection("JwtSettings").Get<JwtSettings>();`
+
+It should be using the `configuration` object that we get from the `builder`.
+
+### Corrected `Program.cs` File
+
+Here is the complete and corrected code for your `Program.cs` file. Please replace the entire file content with this. I've added comments to highlight the exact fix.
+
+```csharp
+// CraRental.Web/Program.cs
+using CraRental.Web.Data;
+using CraRental.Web.DTOs;
+using CraRental.Web.Repositories;
+using CraRental.Web.Repositories.Interfaces;
+using CraRental.Web.Services;
+using CraRental.Web.Services.Interfaces;
+using CraRental.Web.Utilities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+var builder = WebApplication.CreateBuilder(args);
+// Get the configuration instance from the builder
+var configuration = builder.Configuration;
+
+// Configure DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
+
+// --- JWT Configuration ---
+// CORRECTED: Call GetSection on the 'configuration' object instance
+var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();
+
+// Bind the settings from appsettings.json to the JwtSettings class
+builder.Services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
+builder.Services.AddSingleton<JwtService>(); // Register our utility for DI
+
+// --- Authentication Service Setup ---
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
+    };
+});
+// -------------------------
+
+// 1. Add services to the container.
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
+
+// Register repositories for Dependency Injection
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Register services for Dependency Injection
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+var app = builder.Build();
+
+// 2. Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+// Add Authentication Middleware
+// IMPORTANT: This must be placed between UseRouting() and UseAuthorization()
+app.UseAuthentication();
+app.UseAuthorization();
+
+// 3. Map routes for controllers and razor pages
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapRazorPages();
+
+app.Run();
+```
+
+With this correction, your project should now build successfully. You are ready to create the database migrations and test the API endpoints.
+
+**Next Steps (as planned):**
+
+1.  **Create Migrations:** In your terminal, run: `dotnet ef migrations add InitialCreate`
+2.  **Update Database:** Then run: `dotnet ef database update`
